@@ -1,72 +1,69 @@
-#include <iostream>
-#include <vector>
-#include <cstdlib>
-#include <ctime>
+#include <bits/stdc++.h>
 using namespace std;
 
-// Function to contract the graph G by merging nodes u and v
-vector<vector<int>> contractGraph(vector<vector<int>>& G, int u, int v, int n) {
-    // Create a new graph with size (n-1) x (n-1)
-    vector<vector<int>> G2(n - 1, vector<int>(n - 1, 0));
 
-    int idx = 0;
-    for (int i = 0; i < n; i++) {
-        if (i != u && i != v) {
-            int jdx = 0;
-            for (int j = 0; j < n; j++) {
-                if (j != u && j != v) {
-                    G2[idx][jdx] = G[i][j];
-                    jdx++;
-                }
-            }
-            idx++;
-        }
-    }
-
-    for (int i = 0; i < n - 1; i++) {
-        for (int j = 0; j < n - 1; j++) {
-            if (i >= j) {
-                G2[i][j] = G2[j][i];
-            }
-        }
-    }
-
-    return G2;
+bool bfs(int rgraph[6][6], int s, int t, int parent[6]){
+	int visited[6] = {0};
+// 	for(int i = 0; i < 6; i ++){
+// 	visited[i] = 0;
+// }
+	queue<int> q1;
+	q1.push(s);
+	visited[s] = 1;
+	parent[s] = -1;
+	while(!q1.empty()){
+    	int u = q1.front();
+    	q1.pop();
+    	for(int v = 0; v < 6; v++){
+        	if(visited[v] == 0 && rgraph[u][v] > 0){
+            	if(v == t){
+                	parent[v] = u;
+                	return true;
+            	}
+            	q1.push(v);
+            	visited[v] = 1;
+            	parent[v] = u;
+        	}
+    	}
+	}
+	return false;
+    
 }
 
-int minCut(vector<vector<int>>& G, int n, vector<vector<int>>& edge) {
-    if (n == 2) {
-        return G[0][1]; // Base case: return the remaining edge weight
-    }
-
-    int val = (rand() % edge.size());
-    int u = edge[val][0];
-    int v = edge[val][1];
-
-    // Recursively contract the graph G
-    vector<vector<int>> contractedGraph = contractGraph(G, u, v, n);
-
-    return minCut(contractedGraph, n - 1, edge);
+int fordFulkersom(int G[6][6], int s, int t){
+	int rgraph[6][6];//residual graph
+	for(int i = 0; i < 6; i++){
+    	for(int j = 0; j < 6; j++){
+        	rgraph[i][j] = G[i][j];
+    	}
+	}
+	int parent[6];
+	int max_flow = 0;
+	while(bfs(rgraph, s, t, parent)){
+    	int u;
+    	int path_flow = INT_MAX;
+    	for(int v = t; v != s; v = parent[v]){
+        	u = parent[v];
+        	path_flow = min(path_flow, rgraph[u][v]);
+    	}
+    	for(int v = t; v!=s; v = parent[v]){
+        	u = parent[v];
+        	rgraph[u][v] -= path_flow;
+        	rgraph[v][u] += path_flow;
+       	 
+       	 
+    	}
+     	max_flow += path_flow;
+	}
+   
+	return max_flow;
+    
 }
 
-int main() {
-    srand(time(0));
+int main()
+{
+	int G[6][6] = {{0, 16, 13, 0, 0, 0},{0, 0, 10, 12, 0, 0},{0, 4, 0, 0, 14, 0},{0, 0, 9, 0, 0, 20},{0, 0, 0, 7, 0, 4},{0, 0, 0, 0, 0, 0}};
+	cout << fordFulkersom(G, 0, 5) << endl;
 
-    int n;
-    cout << "enter the number of vertices: " << endl;
-    cin >> n;
-    vector<vector<int>> G(n, vector<int>(n, 0));
-
-    int temp;
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            cin >> temp;
-            G[i][j] = temp;
-        }
-    }
-
-    vector<vector<int>> edge = { {1, 2}, {1, 3}, {1, 4}, {2, 3}, {3, 4} };
-    cout << minCut(G, n, edge) << endl;
-
-    return 0;
+	return 0;
 }
